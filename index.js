@@ -5,8 +5,9 @@ const app = express();
 const PORT = 3000;
 
 app.get("/", async (req, res) => {
-  return res.status(200);
+  return res.status(200).send("Working on /");
 });
+
 app.get("/image", async (req, res) => {
   const sizeInKB = parseInt(req.query.size, 10); // Get size in KB
 
