@@ -16,16 +16,16 @@ app.get("/image", async (req, res) => {
     let width = 512;
     let height = 512;
 
-    if (sizeInKB > 500) { // Increase resolution for larger sizes
+    if (sizeInKB > 500) { 
       width = 1024;
       height = 1024;
     }
-    if (sizeInKB > 5000) { // Even higher resolution for bigger sizes
+    if (sizeInKB > 5000) { 
       width = 2048;
       height = 2048;
     }
 
-    // Create an image
+    // Create a base red image
     let image = sharp({
       create: {
         width,
@@ -34,6 +34,16 @@ app.get("/image", async (req, res) => {
         background: { r: 255, g: 0, b: 0 }, // Red background
       },
     });
+
+    // Add text overlay if size > 200KB
+    if (sizeInKB > 10) {
+      const svgText = `
+        <svg width="${width}" height="${height}">
+          <text x="50%" y="50%" font-size="100" text-anchor="middle" fill="white" dy=".3em">${sizeInKB}KB</text>
+        </svg>`;
+
+      image = image.composite([{ input: Buffer.from(svgText) }]);
+    }
 
     // Generate JPEG with adjustable quality
     let imageBuffer = await image.jpeg({ quality: 80 }).toBuffer();
