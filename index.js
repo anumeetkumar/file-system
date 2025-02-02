@@ -4,27 +4,33 @@ const sharp = require("sharp");
 const app = express();
 const PORT = 3000;
 
+app.get("/", async (req, res) => {
+  return res.status(200);
+});
 app.get("/image", async (req, res) => {
   const sizeInKB = parseInt(req.query.size, 10); // Get size in KB
 
   if (isNaN(sizeInKB) || sizeInKB < 1) {
-    return res.status(400).json({ error: "Invalid size parameter (Min: 50KB)" });
+    return res
+      .status(400)
+      .json({ error: "Invalid size parameter (Min: 50KB)" });
   }
 
   try {
     // Convert size format (KB -> MB if needed)
-    const formattedSize = sizeInKB >= 1024 ? `${(sizeInKB / 1024).toFixed(1)}MB` : `${sizeInKB}KB`;
+    const formattedSize =
+      sizeInKB >= 1024 ? `${(sizeInKB / 1024).toFixed(1)}MB` : `${sizeInKB}KB`;
     const fileName = `${formattedSize.replace(".", "_")}.jpeg`; // e.g., "1MB.jpeg" or "512KB.jpeg"
 
     // Dynamically adjust image resolution
     let width = 512;
     let height = 512;
 
-    if (sizeInKB > 500) { 
+    if (sizeInKB > 500) {
       width = 1024;
       height = 1024;
     }
-    if (sizeInKB > 5000) { 
+    if (sizeInKB > 5000) {
       width = 2048;
       height = 2048;
     }
@@ -54,13 +60,18 @@ app.get("/image", async (req, res) => {
 
     // Increase buffer to match requested size
     const totalBytes = sizeInKB * 1024;
-    imageBuffer = Buffer.concat([imageBuffer, Buffer.alloc(Math.max(0, totalBytes - imageBuffer.length))]);
+    imageBuffer = Buffer.concat([
+      imageBuffer,
+      Buffer.alloc(Math.max(0, totalBytes - imageBuffer.length)),
+    ]);
 
     res.set("Content-Type", "image/jpeg");
     res.set("Content-Disposition", `attachment; filename="${fileName}"`);
     res.send(imageBuffer);
   } catch (error) {
-    res.status(500).json({ error: "Error generating image", text: error.message });
+    res
+      .status(500)
+      .json({ error: "Error generating image", text: error.message });
   }
 });
 
