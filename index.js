@@ -12,6 +12,10 @@ app.get("/image", async (req, res) => {
   }
 
   try {
+    // Convert size format (KB -> MB if needed)
+    const formattedSize = sizeInKB >= 1024 ? `${(sizeInKB / 1024).toFixed(1)}MB` : `${sizeInKB}KB`;
+    const fileName = `${formattedSize.replace(".", "_")}.jpeg`; // e.g., "1MB.jpeg" or "512KB.jpeg"
+
     // Dynamically adjust image resolution
     let width = 512;
     let height = 512;
@@ -35,11 +39,11 @@ app.get("/image", async (req, res) => {
       },
     });
 
-    // Add text overlay if size > 200KB
+    // Add text overlay with formatted size
     if (sizeInKB > 10) {
       const svgText = `
         <svg width="${width}" height="${height}">
-          <text x="50%" y="50%" font-size="100" text-anchor="middle" fill="white" dy=".3em">${sizeInKB}KB</text>
+          <text x="50%" y="50%" font-size="100" text-anchor="middle" fill="white" dy=".3em">${formattedSize}</text>
         </svg>`;
 
       image = image.composite([{ input: Buffer.from(svgText) }]);
@@ -53,6 +57,7 @@ app.get("/image", async (req, res) => {
     imageBuffer = Buffer.concat([imageBuffer, Buffer.alloc(Math.max(0, totalBytes - imageBuffer.length))]);
 
     res.set("Content-Type", "image/jpeg");
+    res.set("Content-Disposition", `attachment; filename="${fileName}"`);
     res.send(imageBuffer);
   } catch (error) {
     res.status(500).json({ error: "Error generating image", text: error.message });
